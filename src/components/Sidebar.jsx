@@ -9,7 +9,6 @@ export default function Sidebar({
   level,
   xp,
   levelPct,
-  onLogout,
 }) {
   return (
     <aside
@@ -115,22 +114,6 @@ export default function Sidebar({
         >
           {name || "Grinder"}
         </div>
-        <button
-          onClick={onLogout}
-          style={{
-            background: "none",
-            border: "1px solid rgba(255,255,255,0.1)",
-            color: "#555",
-            borderRadius: 6,
-            padding: "0.3rem 0.75rem",
-            fontFamily: "'Space Mono', monospace",
-            fontSize: "0.65rem",
-            cursor: "pointer",
-            width: "100%",
-          }}
-        >
-          SIGN OUT
-        </button>
       </div>
     </aside>
   );

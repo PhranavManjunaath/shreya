@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "./lib/supabase.js";
 import { today } from "./lib/helpers.js";
 import { BADGES } from "./lib/constants.js";
 import Sidebar from "./components/Sidebar.jsx";
@@ -13,17 +12,30 @@ import Journal from "./components/Journal.jsx";
 import WeightTracker from "./components/WeightTracker.jsx";
 import BadgesPage from "./components/BadgesPage.jsx";
 
-export default function GrindTracker({ session }) {
-  const user = session?.user;
-  const userId = user?.id;
+const K = (key) => `gt_${key}`;
 
-  const [tasks, setTasks] = useState([]);
-  const [history, setHistory] = useState([]);
-  const [journal, setJournal] = useState([]);
-  const [water, setWater] = useState(0);
-  const [weight, setWeight] = useState([]);
+const load = (key, fallback) => {
+  try {
+    const raw = localStorage.getItem(K(key));
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const save = (key, data) => {
+  try {
+    localStorage.setItem(K(key), JSON.stringify(data));
+  } catch {}
+};
+
+export default function GrindTracker() {
+  const [tasks, setTasks] = useState(() => load("tasks", []));
+  const [history, setHistory] = useState(() => load("history", []));
+  const [journal, setJournal] = useState(() => load("journal", []));
+  const [water, setWater] = useState(() => load("water", 0));
+  const [weight, setWeight] = useState(() => load("weight", []));
   const [nav, setNav] = useState("dashboard");
-  const [loading, setLoading] = useState(true);
 
   const [pomodoroActive, setPomodoroActive] = useState(false);
   const [pomodoroTime, setPomodoroTime] = useState(25 * 60);
@@ -35,57 +47,25 @@ export default function GrindTracker({ session }) {
     pomodoroModeRef.current = pomodoroMode;
   }, [pomodoroMode]);
 
-  const initialLoad = useRef(true);
+  useEffect(() => {
+    save("tasks", tasks);
+  }, [tasks]);
 
   useEffect(() => {
-    loadAllData();
-  }, []);
+    save("history", history);
+  }, [history]);
 
-  const loadAllData = async () => {
-    setLoading(true);
-    try {
-      const [tasksRes, historyRes, journalRes, waterRes, weightRes] =
-        await Promise.all([
-          supabase
-            .from("tasks")
-            .select("*")
-            .eq("user_id", userId)
-            .order("created_at", { ascending: false }),
-          supabase
-            .from("history")
-            .select("*")
-            .eq("user_id", userId)
-            .order("date", { ascending: true }),
-          supabase
-            .from("journal")
-            .select("*")
-            .eq("user_id", userId)
-            .order("created_at", { ascending: false }),
-          supabase
-            .from("water_log")
-            .select("*")
-            .eq("user_id", userId)
-            .eq("date", today())
-            .maybeSingle(),
-          supabase
-            .from("weight_log")
-            .select("*")
-            .eq("user_id", userId)
-            .order("created_at", { ascending: true }),
-        ]);
+  useEffect(() => {
+    save("journal", journal);
+  }, [journal]);
 
-      if (tasksRes.data) setTasks(tasksRes.data);
-      if (historyRes.data) setHistory(historyRes.data);
-      if (journalRes.data) setJournal(journalRes.data);
-      if (waterRes.data) setWater(waterRes.data.amount);
-      if (weightRes.data) setWeight(weightRes.data);
-    } catch (err) {
-      console.error("Failed to load data:", err);
-    } finally {
-      initialLoad.current = false;
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    save("water", water);
+  }, [water]);
+
+  useEffect(() => {
+    save("weight", weight);
+  }, [weight]);
 
   const todayHistory = useMemo(() => {
     const gym = tasks.filter((t) => t.section === "gym" && t.done).length;
@@ -104,6 +84,16 @@ export default function GrindTracker({ session }) {
       (a, b) => new Date(a.date) - new Date(b.date)
     );
   }, [history, todayHistory]);
+
+  useEffect(() => {
+    setHistory((prev) => {
+      const idx = prev.findIndex((h) => h.date === today());
+      if (idx === -1) return [...prev, todayHistory];
+      const next = [...prev];
+      next[idx] = { ...next[idx], ...todayHistory };
+      return next;
+    });
+  }, [todayHistory]);
 
   const completedToday = tasks.filter((t) => t.done).length;
   const totalToday = tasks.length;
@@ -125,95 +115,6 @@ export default function GrindTracker({ session }) {
   const stats = { streak, xp, totalGym, totalWork, water };
   const earnedBadges = BADGES.filter((b) => b.req(stats));
 
-  const syncTasksRef = useRef(null);
-  useEffect(() => {
-    if (initialLoad.current) return;
-    clearTimeout(syncTasksRef.current);
-    syncTasksRef.current = setTimeout(async () => {
-      const taskRows = tasks.map((t) => ({
-        id: t.id,
-        user_id: userId,
-        section: t.section,
-        text: t.text,
-        done: t.done,
-        priority: t.priority,
-      }));
-      const { error } = await supabase.from("tasks").upsert(taskRows, {
-        onConflict: "id",
-        ignoreDuplicates: false,
-      });
-      if (error) console.error("task sync error:", error);
-
-      if (tasks.length > 0) {
-        const { error: histErr } = await supabase
-          .from("history")
-          .upsert(
-            { user_id: userId, ...todayHistory },
-            { onConflict: "user_id,date", ignoreDuplicates: false }
-          );
-        if (histErr) console.error("history sync error:", histErr);
-      }
-    }, 500);
-  }, [tasks]);
-
-  const syncJournalRef = useRef(null);
-  useEffect(() => {
-    if (initialLoad.current) return;
-    clearTimeout(syncJournalRef.current);
-    syncJournalRef.current = setTimeout(async () => {
-      for (const entry of journal) {
-        const { error } = await supabase.from("journal").upsert(
-          {
-            id: entry.id,
-            user_id: userId,
-            date: entry.date,
-            text: entry.text,
-          },
-          { onConflict: "id" }
-        );
-        if (error) console.error("journal sync error:", error);
-      }
-    }, 500);
-  }, [journal]);
-
-  const syncWeightRef = useRef(null);
-  useEffect(() => {
-    if (initialLoad.current) return;
-    clearTimeout(syncWeightRef.current);
-    syncWeightRef.current = setTimeout(async () => {
-      for (const entry of weight) {
-        const { error } = await supabase.from("weight_log").upsert(
-          { id: entry.id, user_id: userId, date: entry.date, kg: entry.kg },
-          { onConflict: "id" }
-        );
-        if (error) console.error("weight sync error:", error);
-      }
-    }, 500);
-  }, [weight]);
-
-  const addWater = (ml) => {
-    setWater((prev) => {
-      const next = Math.min(prev + ml, 3000);
-      upsertWater(next);
-      return next;
-    });
-  };
-
-  const resetWater = () => {
-    setWater(0);
-    upsertWater(0);
-  };
-
-  const upsertWater = async (amount) => {
-    const { error } = await supabase
-      .from("water_log")
-      .upsert(
-        { user_id: userId, date: today(), amount },
-        { onConflict: "user_id,date" }
-      );
-    if (error) console.error("water sync error:", error);
-  };
-
   useEffect(() => {
     if (pomodoroActive) {
       pomoRef.current = setInterval(() => {
@@ -234,9 +135,11 @@ export default function GrindTracker({ session }) {
     return () => clearInterval(pomoRef.current);
   }, [pomodoroActive]);
 
-  if (loading) {
-    return <LoadingScreen />;
-  }
+  const addWater = (ml) => {
+    setWater((prev) => Math.min(prev + ml, 3000));
+  };
+
+  const resetWater = () => setWater(0);
 
   return (
     <div
@@ -255,12 +158,11 @@ export default function GrindTracker({ session }) {
       <Sidebar
         nav={nav}
         setNav={setNav}
-        name={user?.user_metadata?.name || user?.email?.split("@")[0] || "Grinder"}
+        name="Grinder"
         streak={streak}
         level={level}
         xp={xp}
         levelPct={levelPct}
-        onLogout={() => supabase.auth.signOut()}
       />
       <main
         style={{
@@ -280,12 +182,7 @@ export default function GrindTracker({ session }) {
           >
             {nav === "dashboard" && (
               <Dashboard
-                user={{
-                  name:
-                    user?.user_metadata?.name ||
-                    user?.email?.split("@")[0] ||
-                    "Grinder",
-                }}
+                user={{ name: "Grinder" }}
                 tasks={tasks}
                 pctToday={pctToday}
                 completedToday={completedToday}
@@ -331,29 +228,6 @@ export default function GrindTracker({ session }) {
           </motion.div>
         </AnimatePresence>
       </main>
-    </div>
-  );
-}
-
-function LoadingScreen() {
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#0a0a0a",
-        fontFamily: "'Orbitron', sans-serif",
-        color: "#39ff14",
-        fontSize: "1.2rem",
-      }}
-    >
-      <link
-        href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Orbitron:wght@700;900&display=swap"
-        rel="stylesheet"
-      />
-      LOADING...
     </div>
   );
 }
