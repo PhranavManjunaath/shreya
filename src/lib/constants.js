@@ -28,7 +28,7 @@ export const NAV_ITEMS = [
   { id: "calendar", icon: "▦", label: "Calendar" },
   { id: "pomodoro", icon: "◎", label: "Pomodoro" },
   { id: "journal", icon: "✍", label: "Journal" },
-  { id: "weight", icon: "⬡", label: "Weight" },
+  { id: "calories", icon: "🍽", label: "Calories" },
   { id: "gym", icon: "💪", label: "Gym Log" },
   { id: "badges", icon: "★", label: "Badges" },
 ];

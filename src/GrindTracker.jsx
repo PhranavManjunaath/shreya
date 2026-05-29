@@ -10,7 +10,7 @@ import Analytics from "./components/Analytics.jsx";
 import CalendarView from "./components/CalendarView.jsx";
 import Pomodoro from "./components/Pomodoro.jsx";
 import Journal from "./components/Journal.jsx";
-import WeightTracker from "./components/WeightTracker.jsx";
+import CalorieTracker from "./components/CalorieTracker.jsx";
 import ProgressiveOverload from "./components/ProgressiveOverload.jsx";
 import BadgesPage from "./components/BadgesPage.jsx";
 
@@ -36,7 +36,6 @@ export default function GrindTracker() {
   const [history, setHistory] = useState(() => load("history", []));
   const [journal, setJournal] = useState(() => load("journal", []));
   const [water, setWater] = useState(() => load("water", 0));
-  const [weight, setWeight] = useState(() => load("weight", []));
   const [nav, setNav] = useState("dashboard");
 
   const [pomodoroActive, setPomodoroActive] = useState(false);
@@ -72,10 +71,6 @@ export default function GrindTracker() {
   useEffect(() => {
     save("water", water);
   }, [water]);
-
-  useEffect(() => {
-    save("weight", weight);
-  }, [weight]);
 
   const todayHistory = useMemo(() => {
     const gym = tasks.filter((t) => t.section === "gym" && t.done).length;
@@ -264,8 +259,8 @@ export default function GrindTracker() {
             {nav === "journal" && (
               <Journal journal={journal} setJournal={setJournal} />
             )}
-            {nav === "weight" && (
-              <WeightTracker weight={weight} setWeight={setWeight} />
+            {nav === "calories" && (
+              <CalorieTracker />
             )}
             {nav === "gym" && (
               <ProgressiveOverload />

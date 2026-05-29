@@ -1,21 +1,3 @@
-export const DAYS = [
-  { key: "monday", label: "Monday", sub: "Chest + Biceps" },
-  { key: "tuesday", label: "Tuesday", sub: "Back + Triceps" },
-  { key: "wednesday", label: "Wednesday", sub: "Legs" },
-  { key: "thursday", label: "Thursday", sub: "Shoulders" },
-  { key: "friday", label: "Friday", sub: "Arms" },
-  { key: "saturday", label: "Saturday", sub: "Legs" },
-];
-
-export const WORKOUTS = {
-  monday: ["Incline Dumbbell Press", "Flat Press", "Cable Fly", "Preacher Curl", "Hammer Curl", "Rear Delt Raise"],
-  tuesday: ["Lat Pulldown", "Barbell Row", "Chest Supported Row", "Pullover", "Tricep Pushdown", "Skull Crusher"],
-  wednesday: ["Squat / Hack Squat", "Romanian Deadlift", "Leg Press", "Hamstring Curl", "Calf Raise", "Hip Thrust"],
-  thursday: ["Shoulder Press", "Lateral Raise", "Rear Delt Fly", "Upright Row / Face Pull", "Cable Chest Press"],
-  friday: ["Meadows Curl", "Incline Curl", "Hammer Cable Curl", "JM Press", "Single Arm Tricep Press", "Forearms"],
-  saturday: ["Hack Squat", "Bulgarian Split Squat", "Hip Thrust", "Ham Curl", "Calf Raise"],
-};
-
 export const calcVolume = (sets) =>
   sets.reduce((sum, s) => sum + (s.weight || 0) * (s.reps || 0), 0);
 
