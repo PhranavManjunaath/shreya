@@ -11,6 +11,9 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       setLoading(false);
+    }).catch((err) => {
+      console.error("getSession error:", err);
+      setLoading(false);
     });
 
     const {

@@ -22,14 +22,14 @@ export default function Auth() {
 
     if (err) {
       setError(err.message);
-      setLoading(false);
+    if (mode === "signup") {
+      setError("Account created! Check your email for confirmation.");
+    }
+    setLoading(false);
       return;
     }
 
-    if (mode === "signup") {
-      setError("Check your email for confirmation link!");
-      setLoading(false);
-    }
+    setLoading(false);
   };
 
   return (
