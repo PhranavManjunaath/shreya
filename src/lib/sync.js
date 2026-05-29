@@ -75,7 +75,7 @@ async function loadFromSupabase(table, userId) {
   return data || [];
 }
 
-async function saveToSupabase(table, userId, data) {
+async function saveToSupabase(table, userId, data, oldData) {
   if (table === "water_log") {
     const today = new Date().toISOString().slice(0, 10);
     await supabase.from(table).upsert(
@@ -87,6 +87,14 @@ async function saveToSupabase(table, userId, data) {
 
   if (table === "calorie_logs") {
     const entries = Array.isArray(data) ? data : [];
+    // Delete entries removed from local state
+    if (Array.isArray(oldData)) {
+      const currentDates = new Set(entries.map((e) => e.date));
+      const removed = oldData.filter((e) => !currentDates.has(e.date));
+      for (const r of removed) {
+        await supabase.from(table).delete().eq("user_id", userId).eq("date", r.date);
+      }
+    }
     for (const entry of entries) {
       await supabase.from(table).upsert(
         { user_id: userId, ...entry },
@@ -96,18 +104,15 @@ async function saveToSupabase(table, userId, data) {
     return;
   }
 
-  if (table === "workout_days" || table === "workout_logs") {
-    const entries = Array.isArray(data) ? data : [];
-    for (const entry of entries) {
-      await supabase.from(table).upsert(
-        { user_id: userId, ...entry },
-        { onConflict: "id" }
-      );
-    }
-    return;
-  }
-
   if (Array.isArray(data)) {
+    // Delete entries removed from local state
+    if (Array.isArray(oldData)) {
+      const newIds = new Set(data.map((e) => e.id));
+      const removedIds = oldData.filter((e) => !newIds.has(e.id)).map((e) => e.id);
+      if (removedIds.length > 0) {
+        await supabase.from(table).delete().eq("user_id", userId).in("id", removedIds);
+      }
+    }
     for (const entry of data) {
       await supabase.from(table).upsert(
         { user_id: userId, ...entry },
@@ -158,8 +163,20 @@ export function useSyncData(key, defaultValue) {
       const table = TABLE_MAP[key];
       if (table) {
         migrateIfNeeded(key, session.user.id);
+        const localData = loadLocal(key, null);
         loadFromSupabase(table, session.user.id).then((remote) => {
-          if (remote && remote.length !== 0) {
+          if (!remote || (Array.isArray(remote) && remote.length === 0)) return;
+          // Merge: keep local entries, add any new remote entries not in local
+          if (Array.isArray(remote) && Array.isArray(localData)) {
+            const localIds = new Set(localData.map((e) => e.id));
+            const newRemote = remote.filter((e) => !localIds.has(e.id));
+            if (newRemote.length > 0) {
+              const merged = [...localData, ...newRemote];
+              setData(merged);
+              saveLocal(key, merged);
+            }
+          } else if (localData === null) {
+            // First time loading on this device
             setData(remote);
             saveLocal(key, remote);
           }
@@ -177,7 +194,7 @@ export function useSyncData(key, defaultValue) {
       if (session?.user) {
         const table = TABLE_MAP[key];
         if (table) {
-          saveToSupabase(table, session.user.id, resolved);
+          saveToSupabase(table, session.user.id, resolved, data);
         }
       }
     },
