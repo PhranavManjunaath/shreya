@@ -79,7 +79,7 @@ export default function GrindTracker({ user }) {
   const earnedBadges = BADGES.filter((b) => b.req(stats));
 
   const addWater = (ml) => {
-    setWater((prev) => Math.min(prev + ml, 3000));
+    setWater((prev) => Math.min(prev + ml, 4000));
   };
 
   const resetWater = () => setWater(0);

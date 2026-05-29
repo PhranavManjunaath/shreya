@@ -93,7 +93,7 @@ export default function Dashboard({
         <StatCard
           label="Water Today"
           value={`${water}ml`}
-          sub="goal: 2000ml"
+          sub="goal: 4000ml"
           accent="#30d0fe"
         />
       </div>
@@ -192,7 +192,7 @@ export default function Dashboard({
           >
             <motion.div
               animate={{
-                width: `${Math.min((water / 2000) * 100, 100)}%`,
+                width: `${Math.min((water / 4000) * 100, 100)}%`,
               }}
               style={{
                 height: "100%",
