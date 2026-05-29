@@ -154,7 +154,7 @@ export default function GrindTracker() {
     <div
       style={{
         display: "flex",
-        flexDirection: "column",
+        flexDirection: isMobile ? "column" : "row",
         minHeight: "100vh",
         background: "#0a0a0a",
         color: "#e8e8e8",
