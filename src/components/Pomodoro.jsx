@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import useMediaQuery from "../lib/useMediaQuery.js";
 import GlassCard from "./shared/GlassCard.jsx";
 import PageHeader from "./shared/PageHeader.jsx";
 
@@ -10,6 +11,9 @@ export default function Pomodoro({
   pomodoroMode,
   setPomodoroMode,
 }) {
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const svgSize = isMobile ? 160 : 200;
+  const fontSize = isMobile ? "2rem" : "2.5rem";
   const mins = String(Math.floor(pomodoroTime / 60)).padStart(2, "0");
   const secs = String(pomodoroTime % 60).padStart(2, "0");
   const maxTime = pomodoroMode === "work" ? 25 * 60 : 5 * 60;
@@ -67,7 +71,7 @@ export default function Pomodoro({
               marginBottom: "2rem",
             }}
           >
-            <svg width={200} height={200} viewBox="0 0 200 200">
+            <svg width={svgSize} height={svgSize} viewBox="0 0 200 200">
               <circle
                 cx={100}
                 cy={100}
@@ -106,7 +110,7 @@ export default function Pomodoro({
               <div
                 style={{
                   fontFamily: "'Orbitron', sans-serif",
-                  fontSize: "2.5rem",
+                  fontSize,
                   fontWeight: 700,
                   color: pomodoroActive ? "#39ff14" : "#fff",
                 }}

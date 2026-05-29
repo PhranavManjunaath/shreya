@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import { QUOTES } from "../lib/constants.js";
 import { weekDays, getGreeting } from "../lib/helpers.js";
+import useMediaQuery from "../lib/useMediaQuery.js";
 import GlassCard from "./shared/GlassCard.jsx";
 import StatCard from "./shared/StatCard.jsx";
 import ProgressRing from "./shared/ProgressRing.jsx";
@@ -30,6 +31,7 @@ export default function Dashboard({
   addWater,
   resetWater,
 }) {
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const quote = QUOTES[new Date().getDay() % QUOTES.length];
   const weekData = history
     .slice(-7)
@@ -37,11 +39,11 @@ export default function Dashboard({
 
   return (
     <div>
-      <div style={{ marginBottom: "2rem" }}>
+      <div style={{ marginBottom: isMobile ? "1.25rem" : "2rem" }}>
         <h2
           style={{
             fontFamily: "'Orbitron', sans-serif",
-            fontSize: "1.4rem",
+            fontSize: isMobile ? "1.1rem" : "1.4rem",
             color: "#fff",
             margin: 0,
           }}
@@ -63,9 +65,11 @@ export default function Dashboard({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-          gap: "1rem",
-          marginBottom: "2rem",
+          gridTemplateColumns: isMobile
+            ? "repeat(2, 1fr)"
+            : "repeat(auto-fit, minmax(160px, 1fr))",
+          gap: isMobile ? "0.6rem" : "1rem",
+          marginBottom: isMobile ? "1rem" : "2rem",
         }}
       >
         <StatCard
@@ -97,9 +101,9 @@ export default function Dashboard({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 2fr",
+          gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr",
           gap: "1rem",
-          marginBottom: "2rem",
+          marginBottom: isMobile ? "1rem" : "2rem",
         }}
       >
         <GlassCard>
@@ -159,9 +163,9 @@ export default function Dashboard({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
+          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
           gap: "1rem",
-          marginBottom: "2rem",
+          marginBottom: isMobile ? "1rem" : "2rem",
         }}
       >
         <GlassCard>
@@ -169,7 +173,7 @@ export default function Dashboard({
           <div
             style={{
               fontFamily: "'Orbitron', sans-serif",
-              fontSize: "1.8rem",
+              fontSize: isMobile ? "1.5rem" : "1.8rem",
               color: "#30d0fe",
               marginBottom: "0.75rem",
             }}

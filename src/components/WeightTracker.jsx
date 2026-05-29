@@ -9,11 +9,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { today, fmtDate } from "../lib/helpers.js";
+import useMediaQuery from "../lib/useMediaQuery.js";
 import GlassCard from "./shared/GlassCard.jsx";
 import PageHeader from "./shared/PageHeader.jsx";
 import SectionLabel from "./shared/SectionLabel.jsx";
 
 export default function WeightTracker({ weight, setWeight }) {
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const [val, setVal] = useState("");
   const add = () => {
     const n = parseFloat(val);
@@ -32,7 +34,7 @@ export default function WeightTracker({ weight, setWeight }) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 2fr",
+          gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr",
           gap: "1rem",
         }}
       >
@@ -105,7 +107,7 @@ export default function WeightTracker({ weight, setWeight }) {
               Log at least 2 entries to see your trend.
             </p>
           ) : (
-            <ResponsiveContainer width="100%" height={180}>
+            <ResponsiveContainer width="100%" height={isMobile ? 140 : 180}>
               <LineChart data={data}>
                 <CartesianGrid
                   strokeDasharray="3 3"

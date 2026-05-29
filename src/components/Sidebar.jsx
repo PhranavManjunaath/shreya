@@ -9,20 +9,28 @@ export default function Sidebar({
   level,
   xp,
   levelPct,
+  isMobile,
+  isOpen,
+  onClose,
 }) {
-  return (
+  const sidebar = (
     <aside
       style={{
         width: 240,
         minHeight: "100vh",
         background: "#0f0f0f",
-        borderRight: "1px solid rgba(57,255,20,0.12)",
+        borderRight: isMobile ? "none" : "1px solid rgba(57,255,20,0.12)",
         display: "flex",
         flexDirection: "column",
         padding: "1.5rem 0",
-        position: "sticky",
+        position: isMobile ? "fixed" : "sticky",
         top: 0,
-        zIndex: 10,
+        left: 0,
+        zIndex: 150,
+        transform: isMobile
+          ? `translateX(${isOpen ? 0 : -260}px)`
+          : "none",
+        transition: "transform 0.25s ease",
       }}
     >
       <div style={{ padding: "0 1.5rem", marginBottom: "2rem" }}>
@@ -42,7 +50,10 @@ export default function Sidebar({
         {NAV_ITEMS.map((item) => (
           <button
             key={item.id}
-            onClick={() => setNav(item.id)}
+            onClick={() => {
+              setNav(item.id);
+              if (isMobile) onClose();
+            }}
             style={{
               width: "100%",
               padding: "0.75rem 1.5rem",
@@ -117,4 +128,25 @@ export default function Sidebar({
       </div>
     </aside>
   );
+
+  if (isMobile) {
+    return (
+      <>
+        {isOpen && (
+          <div
+            onClick={onClose}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.6)",
+              zIndex: 140,
+            }}
+          />
+        )}
+        {sidebar}
+      </>
+    );
+  }
+
+  return sidebar;
 }

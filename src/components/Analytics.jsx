@@ -12,12 +12,14 @@ import {
 } from "recharts";
 import { SECTIONS } from "../lib/constants.js";
 import { fmtDate } from "../lib/helpers.js";
+import useMediaQuery from "../lib/useMediaQuery.js";
 import GlassCard from "./shared/GlassCard.jsx";
 import PageHeader from "./shared/PageHeader.jsx";
 import SectionLabel from "./shared/SectionLabel.jsx";
 import HeatmapChart from "./shared/HeatmapChart.jsx";
 
 export default function Analytics({ history, tasks }) {
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const last14 = history.slice(-14);
   const gymData = last14.map((d) => ({
     name: fmtDate(d.date),
@@ -36,7 +38,7 @@ export default function Analytics({ history, tasks }) {
       <div style={{ display: "grid", gap: "1.5rem" }}>
         <GlassCard>
           <SectionLabel>Daily Productivity (14 days)</SectionLabel>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={isMobile ? 160 : 200}>
             <LineChart data={last14}>
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -77,13 +79,13 @@ export default function Analytics({ history, tasks }) {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
             gap: "1rem",
           }}
         >
           <GlassCard>
             <SectionLabel>Gym vs Work Tasks</SectionLabel>
-            <ResponsiveContainer width="100%" height={180}>
+            <ResponsiveContainer width="100%" height={isMobile ? 140 : 180}>
               <BarChart data={gymData}>
                 <CartesianGrid
                   strokeDasharray="3 3"

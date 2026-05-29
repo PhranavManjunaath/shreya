@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { today } from "./lib/helpers.js";
 import { BADGES } from "./lib/constants.js";
+import useMediaQuery from "./lib/useMediaQuery.js";
 import Sidebar from "./components/Sidebar.jsx";
 import Dashboard from "./components/Dashboard.jsx";
 import Tasks from "./components/Tasks.jsx";
@@ -42,6 +43,14 @@ export default function GrindTracker() {
   const [pomodoroMode, setPomodoroMode] = useState("work");
   const pomoRef = useRef(null);
   const pomodoroModeRef = useRef("work");
+
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const handleNav = (id) => {
+    setNav(id);
+    if (isMobile) setSidebarOpen(false);
+  };
 
   useEffect(() => {
     pomodoroModeRef.current = pomodoroMode;
@@ -145,6 +154,7 @@ export default function GrindTracker() {
     <div
       style={{
         display: "flex",
+        flexDirection: "column",
         minHeight: "100vh",
         background: "#0a0a0a",
         color: "#e8e8e8",
@@ -155,21 +165,55 @@ export default function GrindTracker() {
         href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Orbitron:wght@700;900&display=swap"
         rel="stylesheet"
       />
+      {isMobile && (
+        <div
+          style={{
+            position: "fixed",
+            top: 12,
+            left: 12,
+            zIndex: 200,
+          }}
+        >
+          <button
+            onClick={() => setSidebarOpen((o) => !o)}
+            style={{
+              background: "#0f0f0f",
+              border: "1px solid rgba(57,255,20,0.2)",
+              borderRadius: 8,
+              color: "#39ff14",
+              width: 40,
+              height: 40,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              fontSize: "1.2rem",
+              fontFamily: "'Space Mono', monospace",
+            }}
+          >
+            {sidebarOpen ? "✕" : "☰"}
+          </button>
+        </div>
+      )}
       <Sidebar
         nav={nav}
-        setNav={setNav}
+        setNav={handleNav}
         name="Grinder"
         streak={streak}
         level={level}
         xp={xp}
         levelPct={levelPct}
+        isMobile={isMobile}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
       <main
         style={{
           flex: 1,
-          padding: "2rem",
+          padding: isMobile ? "0.75rem" : "2rem",
           overflowY: "auto",
-          maxWidth: "calc(100% - 260px)",
+          paddingTop: isMobile ? 64 : "2rem",
+          maxWidth: "100%",
         }}
       >
         <AnimatePresence mode="wait">

@@ -115,7 +115,8 @@ export default function CalendarView({ history, pctToday }) {
         <div
           style={{
             display: "flex",
-            gap: "1.5rem",
+            flexWrap: "wrap",
+            gap: "0.75rem",
             marginTop: "1rem",
             fontSize: "0.7rem",
           }}
