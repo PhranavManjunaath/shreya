@@ -6,23 +6,39 @@ import GrindTracker from "./GrindTracker.jsx";
 export default function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      setLoading(false);
-    }).catch((err) => {
-      console.error("getSession error:", err);
-      setLoading(false);
-    });
+    let cancelled = false;
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const timeout = setTimeout(() => {
+      if (!cancelled) setLoading(false);
+    }, 4000);
+
+    supabase.auth.getSession()
+      .then(({ data: { session: s } }) => {
+        if (cancelled) return;
+        setSession(s);
+        clearTimeout(timeout);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("getSession error:", err);
+        if (cancelled) return;
+        clearTimeout(timeout);
+        setError(err?.message || "Connection failed");
+        setLoading(false);
+      });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   if (loading) {
@@ -49,7 +65,7 @@ export default function App() {
   }
 
   if (!session) {
-    return <Auth />;
+    return <Auth initialError={error} />;
   }
 
   return <GrindTracker session={session} />;

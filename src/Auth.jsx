@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { supabase } from "./lib/supabase.js";
 
-export default function Auth() {
+export default function Auth({ initialError }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(initialError || null);
   const [mode, setMode] = useState("login");
 
   const handleSubmit = async (e) => {
