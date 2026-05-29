@@ -1,33 +1,16 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { uid } from "../lib/helpers.js";
+import { useSyncData } from "../lib/sync.js";
 import useMediaQuery from "../lib/useMediaQuery.js";
 import GlassCard from "./shared/GlassCard.jsx";
 import PageHeader from "./shared/PageHeader.jsx";
 import ProgressiveOverloadLog from "./ProgressiveOverloadLog.jsx";
 import ProgressiveOverloadAnalytics from "./ProgressiveOverloadAnalytics.jsx";
 
-const loadLogs = () => {
-  try {
-    const raw = localStorage.getItem("gt_progressive_overload");
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-};
-
-const loadDays = () => {
-  try {
-    const raw = localStorage.getItem("gt_workout_days");
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-};
-
 export default function ProgressiveOverload() {
-  const [logs, setLogs] = useState(loadLogs);
-  const [days, setDays] = useState(loadDays);
+  const [logs, setLogs] = useSyncData("workout_logs", []);
+  const [days, setDays] = useSyncData("workout_days", []);
   const [selectedDayId, setSelectedDayId] = useState(null);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [editingDayId, setEditingDayId] = useState(null);
@@ -37,18 +20,6 @@ export default function ProgressiveOverload() {
   const [newDayInput, setNewDayInput] = useState("");
   const [newExInput, setNewExInput] = useState("");
   const isMobile = useMediaQuery("(max-width: 767px)");
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("gt_progressive_overload", JSON.stringify(logs));
-    } catch {}
-  }, [logs]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("gt_workout_days", JSON.stringify(days));
-    } catch {}
-  }, [days]);
 
   useEffect(() => {
     if (days.length > 0 && !selectedDayId) {

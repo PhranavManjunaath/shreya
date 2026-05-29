@@ -1,27 +1,146 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { weekDays, today } from "../lib/helpers.js";
 import GlassCard from "./shared/GlassCard.jsx";
 import PageHeader from "./shared/PageHeader.jsx";
+import useMediaQuery from "../lib/useMediaQuery.js";
+
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 export default function CalendarView({ history, pctToday }) {
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const now = new Date();
-  const year = now.getFullYear(),
-    month = now.getMonth();
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const [viewYear, setViewYear] = useState(now.getFullYear());
+  const [viewMonth, setViewMonth] = useState(now.getMonth());
+
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewYear((y) => y - 1); setViewMonth(11); }
+    else setViewMonth((m) => m - 1);
+  };
+
+  const nextMonth = () => {
+    if (viewMonth === 11) { setViewYear((y) => y + 1); setViewMonth(0); }
+    else setViewMonth((m) => m + 1);
+  };
+
+  const prevYear = () => setViewYear((y) => y - 1);
+  const nextYear = () => setViewYear((y) => y + 1);
+
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const histMap = {};
   history.forEach((d) => {
     histMap[d.date] = d.pct;
   });
   histMap[today()] = pctToday;
 
+  const isCurrentMonth = viewMonth === now.getMonth() && viewYear === now.getFullYear();
+
   return (
     <div>
       <PageHeader
         title="Calendar"
-        sub={now.toLocaleString("default", { month: "long", year: "numeric" })}
+        sub={`${MONTHS[viewMonth]} ${viewYear}`}
       />
       <GlassCard>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "1rem",
+          }}
+        >
+          <div style={{ display: "flex", gap: "0.3rem" }}>
+            <button
+              onClick={prevYear}
+              style={{
+                background: "transparent",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 6,
+                color: "#555",
+                width: 36,
+                height: 36,
+                cursor: "pointer",
+                fontSize: "0.8rem",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "'Space Mono', monospace",
+              }}
+            >
+              «
+            </button>
+            <button
+              onClick={prevMonth}
+              style={{
+                background: "transparent",
+                border: "1px solid rgba(57,255,20,0.2)",
+                borderRadius: 6,
+                color: "#39ff14",
+                width: 36,
+                height: 36,
+                cursor: "pointer",
+                fontSize: "1rem",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "'Space Mono', monospace",
+              }}
+            >
+              ‹
+            </button>
+          </div>
+          <div
+            style={{
+              fontFamily: "'Orbitron', sans-serif",
+              fontSize: isMobile ? "0.9rem" : "1rem",
+              color: "#fff",
+            }}
+          >
+            {MONTHS[viewMonth]} {viewYear}
+          </div>
+          <div style={{ display: "flex", gap: "0.3rem" }}>
+            <button
+              onClick={nextMonth}
+              style={{
+                background: "transparent",
+                border: "1px solid rgba(57,255,20,0.2)",
+                borderRadius: 6,
+                color: "#39ff14",
+                width: 36,
+                height: 36,
+                cursor: "pointer",
+                fontSize: "1rem",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "'Space Mono', monospace",
+              }}
+            >
+              ›
+            </button>
+            <button
+              onClick={nextYear}
+              style={{
+                background: "transparent",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 6,
+                color: "#555",
+                width: 36,
+                height: 36,
+                cursor: "pointer",
+                fontSize: "0.8rem",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "'Space Mono', monospace",
+              }}
+            >
+              »
+            </button>
+          </div>
+        </div>
         <div
           style={{
             display: "grid",
@@ -57,7 +176,7 @@ export default function CalendarView({ history, pctToday }) {
           ))}
           {Array.from({ length: daysInMonth }).map((_, i) => {
             const day = i + 1;
-            const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+            const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
             const pct = histMap[dateStr];
             const isToday = dateStr === today();
             let bg = "#1a1a1a";

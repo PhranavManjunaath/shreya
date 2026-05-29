@@ -26,7 +26,7 @@ export const NAV_ITEMS = [
   { id: "tasks", icon: "✓", label: "Tasks" },
   { id: "analytics", icon: "◈", label: "Analytics" },
   { id: "calendar", icon: "▦", label: "Calendar" },
-  { id: "pomodoro", icon: "◎", label: "Pomodoro" },
+
   { id: "journal", icon: "✍", label: "Journal" },
   { id: "calories", icon: "🍽", label: "Calories" },
   { id: "gym", icon: "💪", label: "Gym Log" },

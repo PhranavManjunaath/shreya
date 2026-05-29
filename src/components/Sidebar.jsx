@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { supabase } from "../lib/supabase.js";
 import { NAV_ITEMS } from "../lib/constants.js";
 
 export default function Sidebar({
@@ -12,7 +13,12 @@ export default function Sidebar({
   isMobile,
   isOpen,
   onClose,
+  userEmail,
 }) {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
   const sidebar = (
     <aside
       style={{
@@ -118,13 +124,34 @@ export default function Sidebar({
         </div>
         <div
           style={{
-            fontSize: "0.7rem",
+            fontSize: "0.65rem",
             color: "#444",
             marginBottom: "0.5rem",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+          title={userEmail}
+        >
+          {name || userEmail || "Grinder"}
+        </div>
+        <button
+          onClick={handleLogout}
+          style={{
+            width: "100%",
+            padding: "0.4rem 0",
+            background: "transparent",
+            border: "1px solid rgba(255,69,58,0.3)",
+            borderRadius: 6,
+            color: "#ff453a",
+            fontFamily: "'Space Mono', monospace",
+            fontSize: "0.65rem",
+            cursor: "pointer",
+            letterSpacing: "0.1em",
           }}
         >
-          {name || "Grinder"}
-        </div>
+          SIGN OUT
+        </button>
       </div>
     </aside>
   );

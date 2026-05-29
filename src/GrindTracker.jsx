@@ -1,48 +1,25 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { today } from "./lib/helpers.js";
 import { BADGES } from "./lib/constants.js";
+import { useSyncData } from "./lib/sync.js";
 import useMediaQuery from "./lib/useMediaQuery.js";
 import Sidebar from "./components/Sidebar.jsx";
 import Dashboard from "./components/Dashboard.jsx";
 import Tasks from "./components/Tasks.jsx";
 import Analytics from "./components/Analytics.jsx";
 import CalendarView from "./components/CalendarView.jsx";
-import Pomodoro from "./components/Pomodoro.jsx";
 import Journal from "./components/Journal.jsx";
 import CalorieTracker from "./components/CalorieTracker.jsx";
 import ProgressiveOverload from "./components/ProgressiveOverload.jsx";
 import BadgesPage from "./components/BadgesPage.jsx";
 
-const K = (key) => `gt_${key}`;
-
-const load = (key, fallback) => {
-  try {
-    const raw = localStorage.getItem(K(key));
-    return raw ? JSON.parse(raw) : fallback;
-  } catch {
-    return fallback;
-  }
-};
-
-const save = (key, data) => {
-  try {
-    localStorage.setItem(K(key), JSON.stringify(data));
-  } catch {}
-};
-
-export default function GrindTracker() {
-  const [tasks, setTasks] = useState(() => load("tasks", []));
-  const [history, setHistory] = useState(() => load("history", []));
-  const [journal, setJournal] = useState(() => load("journal", []));
-  const [water, setWater] = useState(() => load("water", 0));
+export default function GrindTracker({ user }) {
+  const [tasks, setTasks] = useSyncData("tasks", []);
+  const [history, setHistory] = useSyncData("history", []);
+  const [journal, setJournal] = useSyncData("journal", []);
+  const [water, setWater] = useSyncData("water", 0);
   const [nav, setNav] = useState("dashboard");
-
-  const [pomodoroActive, setPomodoroActive] = useState(false);
-  const [pomodoroTime, setPomodoroTime] = useState(25 * 60);
-  const [pomodoroMode, setPomodoroMode] = useState("work");
-  const pomoRef = useRef(null);
-  const pomodoroModeRef = useRef("work");
 
   const isMobile = useMediaQuery("(max-width: 767px)");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -51,26 +28,6 @@ export default function GrindTracker() {
     setNav(id);
     if (isMobile) setSidebarOpen(false);
   };
-
-  useEffect(() => {
-    pomodoroModeRef.current = pomodoroMode;
-  }, [pomodoroMode]);
-
-  useEffect(() => {
-    save("tasks", tasks);
-  }, [tasks]);
-
-  useEffect(() => {
-    save("history", history);
-  }, [history]);
-
-  useEffect(() => {
-    save("journal", journal);
-  }, [journal]);
-
-  useEffect(() => {
-    save("water", water);
-  }, [water]);
 
   const todayHistory = useMemo(() => {
     const gym = tasks.filter((t) => t.section === "gym" && t.done).length;
@@ -98,6 +55,7 @@ export default function GrindTracker() {
       next[idx] = { ...next[idx], ...todayHistory };
       return next;
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todayHistory]);
 
   const completedToday = tasks.filter((t) => t.done).length;
@@ -119,26 +77,6 @@ export default function GrindTracker() {
   const totalWork = mergedHistory.reduce((a, d) => a + d.work, 0);
   const stats = { streak, xp, totalGym, totalWork, water };
   const earnedBadges = BADGES.filter((b) => b.req(stats));
-
-  useEffect(() => {
-    if (pomodoroActive) {
-      pomoRef.current = setInterval(() => {
-        setPomodoroTime((t) => {
-          if (t <= 1) {
-            clearInterval(pomoRef.current);
-            setPomodoroActive(false);
-            const currentMode = pomodoroModeRef.current;
-            setPomodoroMode(currentMode === "work" ? "break" : "work");
-            return currentMode === "work" ? 5 * 60 : 25 * 60;
-          }
-          return t - 1;
-        });
-      }, 1000);
-    } else {
-      clearInterval(pomoRef.current);
-    }
-    return () => clearInterval(pomoRef.current);
-  }, [pomodoroActive]);
 
   const addWater = (ml) => {
     setWater((prev) => Math.min(prev + ml, 3000));
@@ -194,7 +132,7 @@ export default function GrindTracker() {
       <Sidebar
         nav={nav}
         setNav={handleNav}
-        name="Grinder"
+        name={user?.user_metadata?.name || "Grinder"}
         streak={streak}
         level={level}
         xp={xp}
@@ -202,6 +140,7 @@ export default function GrindTracker() {
         isMobile={isMobile}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        userEmail={user?.email}
       />
       <main
         style={{
@@ -222,7 +161,7 @@ export default function GrindTracker() {
           >
             {nav === "dashboard" && (
               <Dashboard
-                user={{ name: "Grinder" }}
+                user={{ name: user?.user_metadata?.name || "Grinder" }}
                 tasks={tasks}
                 pctToday={pctToday}
                 completedToday={completedToday}
@@ -245,16 +184,6 @@ export default function GrindTracker() {
             )}
             {nav === "calendar" && (
               <CalendarView history={mergedHistory} pctToday={pctToday} />
-            )}
-            {nav === "pomodoro" && (
-              <Pomodoro
-                pomodoroTime={pomodoroTime}
-                setPomodoroTime={setPomodoroTime}
-                pomodoroActive={pomodoroActive}
-                setPomodoroActive={setPomodoroActive}
-                pomodoroMode={pomodoroMode}
-                setPomodoroMode={setPomodoroMode}
-              />
             )}
             {nav === "journal" && (
               <Journal journal={journal} setJournal={setJournal} />
