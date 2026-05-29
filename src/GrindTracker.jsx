@@ -11,6 +11,7 @@ import CalendarView from "./components/CalendarView.jsx";
 import Pomodoro from "./components/Pomodoro.jsx";
 import Journal from "./components/Journal.jsx";
 import WeightTracker from "./components/WeightTracker.jsx";
+import ProgressiveOverload from "./components/ProgressiveOverload.jsx";
 import BadgesPage from "./components/BadgesPage.jsx";
 
 const K = (key) => `gt_${key}`;
@@ -265,6 +266,9 @@ export default function GrindTracker() {
             )}
             {nav === "weight" && (
               <WeightTracker weight={weight} setWeight={setWeight} />
+            )}
+            {nav === "gym" && (
+              <ProgressiveOverload />
             )}
             {nav === "badges" && (
               <BadgesPage earnedBadges={earnedBadges} stats={stats} />

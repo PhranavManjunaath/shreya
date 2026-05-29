@@ -29,5 +29,6 @@ export const NAV_ITEMS = [
   { id: "pomodoro", icon: "◎", label: "Pomodoro" },
   { id: "journal", icon: "✍", label: "Journal" },
   { id: "weight", icon: "⬡", label: "Weight" },
+  { id: "gym", icon: "💪", label: "Gym Log" },
   { id: "badges", icon: "★", label: "Badges" },
 ];
